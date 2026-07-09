@@ -3,26 +3,25 @@ import makeWASocket, {
   fetchLatestBaileysVersion
 } from "@whiskeysockets/baileys";
 
-import dotenv from "dotenv";
-
-dotenv.config();
-
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("session");
   const { version } = await fetchLatestBaileysVersion();
 
   const sock = makeWASocket({
     version,
-    auth: state
+    auth: state,
+    printQRInTerminal: false
   });
 
   sock.ev.on("creds.update", saveCreds);
 
-  sock.ev.on("connection.update", ({ qr, connection }) => {
-    if (qr) {
-      console.log("QR جاهز، افتحه من Railway Logs");
-    }
+  if (!sock.authState.creds.registered) {
+    const phone = "249XXXXXXXXX"; // اكتب رقمك هنا مع 249
+    const code = await sock.requestPairingCode(phone);
+    console.log("PAIRING CODE:", code);
+  }
 
+  sock.ev.on("connection.update", ({ connection }) => {
     if (connection === "open") {
       console.log("✅ WhatsApp Connected");
     }

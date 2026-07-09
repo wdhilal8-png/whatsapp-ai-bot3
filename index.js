@@ -15,15 +15,24 @@ async function startBot() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  if (!sock.authState.creds.registered) {
-    const phone = "249125270800 "; //  249125270800 
-    const code = await sock.requestPairingCode(phone);
-    console.log("PAIRING CODE:", code);
-  }
+  sock.ev.on("connection.update", async ({ connection }) => {
+    if (connection === "connecting") {
+      if (!sock.authState.creds.registered) {
+        try {
+          const code = await sock.requestPairingCode("249125270800");
+          console.log("PAIRING CODE:", code);
+        } catch (err) {
+          console.error("PAIRING ERROR:", err);
+        }
+      }
+    }
 
-  sock.ev.on("connection.update", ({ connection }) => {
     if (connection === "open") {
       console.log("✅ WhatsApp Connected");
+    }
+
+    if (connection === "close") {
+      console.log("❌ Connection Closed");
     }
   });
 }
